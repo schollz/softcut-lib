@@ -60,9 +60,14 @@ void Voice:: processBlockMono(const float *in, float *out, int numFrames) {
     std::function<void(sample_t, sample_t*)> sampleFunc;
     if(playFlag) {
         if(recFlag) {
+            if (sch.getRecOnceDone()) {
+                recFlag = false;
+                sch.setRecOnceFlag(false);
+            }
             sampleFunc = [this](float in, float* out) {
                 this->sch.processSample(in, out);
             };
+
         } else {
             sampleFunc = [this](float in, float* out) {
                 this->sch.processSampleNoWrite(in, out);
@@ -70,6 +75,10 @@ void Voice:: processBlockMono(const float *in, float *out, int numFrames) {
         }
     } else {
         if(recFlag) {
+            if (sch.getRecOnceDone()) {
+                recFlag = false;
+                sch.setRecOnceFlag(false);
+            }
             sampleFunc = [this](float in, float* out) {
                 this->sch.processSampleNoRead(in, out);
             };
@@ -95,15 +104,6 @@ void Voice:: processBlockMono(const float *in, float *out, int numFrames) {
 
     
     rawPhase.store(sch.getActivePhase(), std::memory_order_relaxed);
-
-    if(recFlag) {
-        if (sch.getRecOnceDone()) {
-            // record once is finished, turn off recording flag
-            // and reset the recording subheads
-            recFlag = false;
-            sch.setRecOnceFlag(false);
-        }
-    }
 }
 
 void Voice::setSampleRate(float hz) {
